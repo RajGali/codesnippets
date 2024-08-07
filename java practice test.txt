@@ -1,0 +1,331 @@
+
+user input/output
+================
+import java.util.Scanner;
+
+public class UserInputExample {
+    public static void main(String[] args) {
+        // Create a Scanner object to read input
+        Scanner scanner = new Scanner(System.in);
+
+        // Prompt the user to enter their name
+        System.out.print("Enter your name: ");
+        String name = scanner.nextLine();
+
+        // Prompt the user to enter their age
+        System.out.print("Enter your age: ");
+        int age = scanner.nextInt();
+
+        // Close the scanner
+        scanner.close();
+
+        // Print a greeting message
+        System.out.println("Hello, " + name + "! You are " + age + " years old.");
+    }
+}
+
+
+serializable ( ability to convert classes into byte stream)
+============
+
+import java.io.Serializable;
+
+public class Person implements Serializable {
+    private static final long serialVersionUID = 1L;
+    private String name;
+    private int age;
+
+    public Person(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    @Override
+    public String toString() {
+        return "Person{name='" + name + "', age=" + age + "}";
+    }
+
+    // Getters and setters (optional)
+}
+
+
+serialisation: ( writing to a file)
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+
+public class SerializeDemo {
+    public static void main(String[] args) {
+        Person person = new Person("John Doe", 30);
+
+        try (FileOutputStream fileOut = new FileOutputStream("person.ser");
+             ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
+            out.writeObject(person);
+            System.out.println("Serialized data is saved in person.ser");
+        } catch (IOException i) {
+            i.printStackTrace();
+        }
+    }
+}
+
+de-serailisaton ( reading from file)
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+
+public class DeserializeDemo {
+    public static void main(String[] args) {
+        Person person = null;
+
+        try (FileInputStream fileIn = new FileInputStream("person.ser");
+             ObjectInputStream in = new ObjectInputStream(fileIn)) {
+            person = (Person) in.readObject();
+        } catch (IOException i) {
+            i.printStackTrace();
+        } catch (ClassNotFoundException c) {
+            System.out.println("Person class not found");
+            c.printStackTrace();
+        }
+
+        System.out.println("Deserialized Person...");
+        System.out.println(person);
+    }
+}
+
+
+
+
+generics/collections
+====================
+public class Box<T> {
+    private T content;
+
+    public void setContent(T content) {
+        this.content = content;
+    }
+
+    public T getContent() {
+        return content;
+    }
+
+    @Override
+    public String toString() {
+        return "Box{" + "content=" + content + '}';
+    }
+}
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class GenericsExample {
+    public static void main(String[] args) {
+        // Create a list of Box<Integer>
+        List<Box<Integer>> intBoxes = new ArrayList<>();
+
+        // Create a Box of Integer
+        Box<Integer> intBox = new Box<>();
+        intBox.setContent(123);
+
+        // Add the Box to the list
+        intBoxes.add(intBox);
+
+        // Create another Box of Integer
+        Box<Integer> anotherIntBox = new Box<>();
+        anotherIntBox.setContent(456);
+
+        // Add the second Box to the list
+        intBoxes.add(anotherIntBox);
+
+        // Iterate through the list and print contents
+        for (Box<Integer> box : intBoxes) {
+            System.out.println("Box contains: " + box.getContent());
+        }
+
+        // Create a list of Box<String>
+        List<Box<String>> stringBoxes = new ArrayList<>();
+
+        // Create a Box of String
+        Box<String> strBox = new Box<>();
+        strBox.setContent("Hello Generics");
+
+        // Add the Box to the list
+        stringBoxes.add(strBox);
+
+        // Iterate through the list and print contents
+        for (Box<String> box : stringBoxes) {
+            System.out.println("Box contains: " + box.getContent());
+        }
+    }
+}
+
+
+Nested class
+=============
+public class OuterClass {
+    private String outerField = "Outer Field";
+
+    // Static nested class
+    public static class StaticNestedClass {
+        public void display() {
+            System.out.println("Inside Static Nested Class");
+            // Can't access outerField directly since it's non-static
+        }
+    }
+
+    // Inner class
+    public class InnerClass {
+        public void display() {
+            System.out.println("Inside Inner Class");
+            System.out.println("Accessing outer field: " + outerField);
+        }
+    }
+
+    public void testClasses() {
+        // Creating instance of static nested class
+        StaticNestedClass staticNested = new StaticNestedClass();
+        staticNested.display();
+
+        // Creating instance of inner class
+        InnerClass inner = new InnerClass();
+        inner.display();
+    }
+
+    public static void main(String[] args) {
+        // Creating instance of OuterClass
+        OuterClass outer = new OuterClass();
+        outer.testClasses();
+    }
+}
+
+
+
+multi thread
+============
+// Task1 class implementing Runnable
+class Task1 implements Runnable {
+    @Override
+    public void run() {
+        for (int i = 0; i < 5; i++) {
+            System.out.println("Task1 - Count: " + i);
+            try {
+                Thread.sleep(1000); // Sleep for 1 second
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.println("Task1 Complete");
+    }
+}
+
+// Task2 class implementing Runnable
+class Task2 implements Runnable {
+    @Override
+    public void run() {
+        for (int i = 0; i < 5; i++) {
+            System.out.println("Task2 - Count: " + i);
+            try {
+                Thread.sleep(1500); // Sleep for 1.5 seconds
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.println("Task2 Complete");
+    }
+}
+
+// Main class to run the tasks
+public class ThreadingExample {
+    public static void main(String[] args) {
+        // Create instances of the tasks
+        Task1 task1 = new Task1();
+        Task2 task2 = new Task2();
+
+        // Create threads for the tasks
+        Thread thread1 = new Thread(task1);
+        Thread thread2 = new Thread(task2);
+
+        // Start the threads
+        thread1.start();
+        thread2.start();
+    }
+}
+
+
+regular expressions
+==================
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class RegexExample {
+    public static void main(String[] args) {
+        // Define a regular expression pattern
+        String regex = "\\b[A-Za-z]{4}\\b"; // Matches any 4-letter word
+
+        // Compile the pattern
+        Pattern pattern = Pattern.compile(regex);
+
+        // Input text
+        String text = "This is a test. Do you like Java?";
+
+        // Create a matcher for the pattern in the given text
+        Matcher matcher = pattern.matcher(text);
+
+        // Find and print all matches
+        while (matcher.find()) {
+            System.out.println("Found a match: " + matcher.group());
+        }
+    }
+}
+
+write tests using Junits
+========================
+<dependency>
+    <groupId>org.junit.jupiter</groupId>
+    <artifactId>junit-jupiter-api</artifactId>
+    <version>5.7.0</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.junit.jupiter</groupId>
+    <artifactId>junit-jupiter-engine</artifactId>
+    <version>5.7.0</version>
+    <scope>test</scope>
+</dependency>
+
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class RegexExampleTest {
+
+    @Test
+    public void testFourLetterWords() {
+        // Define the regular expression pattern
+        String regex = "\\b[A-Za-z]{4}\\b";
+        Pattern pattern = Pattern.compile(regex);
+
+        // Test input
+        String text = "This is a test. Do you like Java?";
+
+        // Expected matches
+        String[] expectedMatches = {"This", "test", "Java"};
+
+        // Create a matcher for the pattern in the given text
+        Matcher matcher = pattern.matcher(text);
+
+        // Find and assert matches
+        int index = 0;
+        while (matcher.find()) {
+            assertTrue(index < expectedMatches.length, "More matches than expected.");
+            assertEquals(expectedMatches[index], matcher.group(), "Match did not meet expectation.");
+            index++;
+        }
+        assertEquals(expectedMatches.length, index, "Number of matches did not meet expectation.");
+    }
+}
