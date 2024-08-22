@@ -1,0 +1,97 @@
+@startuml
+skinparam sequence {
+    Actor BorderColor black
+    Participant BorderColor black
+    LifeLine BorderColor black
+    LifeLine BackgroundColor #DDDDDD
+    Box BorderColor black
+    Box BackgroundColor #F9F9F9
+    Note BackgroundColor #FFFFE0
+    Note BorderColor black
+}
+
+actor Client
+participant "Rule Service" as RS
+participant "DCRE Service" as DCRE
+participant "Fallback Service" as Fallback
+
+== Closed State ==
+Client -> RS: Request
+activate RS
+alt DCRE Service Success
+    RS -> DCRE: API Call
+    activate DCRE
+    DCRE --> RS: Success Response
+    deactivate DCRE
+    RS --> Client: Success Response
+    deactivate RS
+else DCRE Service Failure
+    RS -> DCRE: API Call
+    activate DCRE
+    DCRE --> RS: Error Response
+    deactivate DCRE
+    
+    loop Retry DCRE API Call (Max 3 times)
+        RS -> DCRE: Retry API Call
+        activate DCRE
+        alt Retry Success
+            DCRE --> RS: Success Response
+            deactivate DCRE
+            RS --> Client: Success Response
+            deactivate RS
+            break
+        else Retry Failure
+            DCRE --> RS: Error Response
+            deactivate DCRE
+        end
+    end
+    
+    RS -> Fallback: Get Fallback Response
+    activate Fallback
+    Fallback --> RS: Fallback Response
+    deactivate Fallback
+    RS --> Client: Fallback Response
+    deactivate RS
+    
+    note over RS: Circuit Breaker transitions to Open State
+end
+
+== Open State ==
+Client -> RS: Request
+activate RS
+note over RS: Circuit Breaker is OPEN
+RS -> Fallback: Get Fallback Response
+activate Fallback
+Fallback --> RS: Fallback Response
+deactivate Fallback
+RS --> Client: Fallback Response
+deactivate RS
+
+note over RS: After timeout, Circuit Breaker transitions to Half-Open State
+
+== Half-Open State ==
+Client -> RS: Request
+activate RS
+note over RS: Circuit Breaker is HALF-OPEN
+RS -> DCRE: Trial API Call
+activate DCRE
+alt Trial Success
+    DCRE --> RS: Success Response
+    deactivate DCRE
+    RS --> Client: Success Response
+    deactivate RS
+    note over RS: Circuit Breaker transitions to Closed State
+else Trial Failure
+    DCRE --> RS: Error Response
+    deactivate DCRE
+    
+    RS -> Fallback: Get Fallback Response
+    activate Fallback
+    Fallback --> RS: Fallback Response
+    deactivate Fallback
+    RS --> Client: Fallback Response
+    deactivate RS
+    
+    note over RS: Circuit Breaker transitions back to Open State
+end
+@enduml
